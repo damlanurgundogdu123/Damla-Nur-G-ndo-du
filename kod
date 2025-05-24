@@ -1,0 +1,76 @@
+package com.service;
+
+import com.model.*;
+import com.service.*;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+public class App {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Örnek veriler
+
+
+
+        Ucak ucak1 = new Ucak("737", "Boeing", "SN1234", 3);
+        Lokasyon lokasyon1 = new Lokasyon("Türkiye", "İstanbul", "IST", true);
+
+        Ucus ucus = new Ucus(lokasyon1, LocalDateTime.of(2025, 6, 1, 14, 30), ucak1);
+
+        JsonFileManager fileManagerY = new JsonFileManager();
+        List<Rezervasyon> eskiRezervasyonlar = fileManagerY.loadReservations();
+
+
+
+        List<Ucus> ucuslar =new ArrayList<>();
+        ucuslar.add(ucus);
+        List<Rezervasyon> rezervasyonlar = new ArrayList<>();
+
+        System.out.println("Mevcut Uçuşlar:");
+        for (int i = 0; i < ucuslar.size(); i++) {
+            System.out.println((i + 1) + ". " + ucuslar.get(i));
+        }
+
+        System.out.print("Bir uçuş seçin (1-" + ucuslar.size() + "): ");
+        int secim = scanner.nextInt();
+        scanner.nextLine(); // dummy newline
+
+        Ucus secilenUcus = ucuslar.get(secim - 1);
+
+        if (secilenUcus.rezervasyonYap()) {
+            System.out.print("Adınız: ");
+            String ad = scanner.nextLine();
+            System.out.print("Soyadınız: ");
+            String soyad = scanner.nextLine();
+            System.out.print("Yaşınız: ");
+            int yas = scanner.nextInt();
+
+            Rezervasyon rezervasyon = new Rezervasyon(ad, soyad, yas, secilenUcus);
+            // Seçilen uçuş için eski rezervasyon sayısını bul
+            long ayniUcusSayisi = eskiRezervasyonlar.stream()
+                    .filter(r -> r.getUcus().getSaat().equals(secilenUcus.getSaat()) &&
+                            r.getUcus().getUcak().toString().equals(secilenUcus.getUcak().toString()))
+                    .count();
+
+            int kapasite = secilenUcus.getUcak().getKoltukKapasitesi();
+
+            if (ayniUcusSayisi >= kapasite) {
+                System.out.println("Bu uçuşta boş koltuk kalmamıştır");
+                return;
+            }else {
+
+                //eskiRezervasyonlar.add(rezervasyon);
+                rezervasyonlar.add(rezervasyon);
+                JsonFileManager fileManager = new JsonFileManager();
+                fileManager.saveReservations(rezervasyonlar);
+                System.out.println("Rezervasyon Yapıldı");
+            }
+
+
+
+
+        }
+    }
+}
